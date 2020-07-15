@@ -1,4 +1,5 @@
 import * as dgram from 'dgram';
+import { wait } from './utils';
 
 interface DroneState {
     [key: string]: number;
@@ -18,12 +19,23 @@ export class Drone {
     private host: string = '192.168.10.1';
     private commandPort: number = 8889;
     private statePort: number = 8890;
+	
+	private upperDistanceLimit: number = 500;
+	private lowerDistanceLimit: number = 20;
+	private takeOffTime: number = 5000;
 
     constructor(host?: string, commandPort?: number, statePort?: number) {
         if (host) this.host = host;
         if (commandPort) this.commandPort = commandPort;
         if (statePort) this.statePort = statePort;
     }
+
+    private checkForDistanceLimit = (value: number) => {
+        if (value < this.lowerDistanceLimit || value > this.upperDistanceLimit)
+            console.error(
+                `Out of range, need to be between ${this.lowerDistanceLimit} and ${this.lowerDistanceLimit}`
+            );
+    };
 
     private parseString = (str: string): DroneState => {
         return Object.fromEntries(
@@ -53,7 +65,27 @@ export class Drone {
         this.command('emergency');
     }
 
+    public async takeoff() {
+		this.command('takeoff');
+		return wait(this.takeOffTime)
+    }
+
+    public land() {
+        this.command('land');
+    }
+
+    public up(x: number) {
+        this.checkForDistanceLimit(x);
+        this.command(`up ${x}`);
+	}
+	
+	public down(x: number) {
+        this.checkForDistanceLimit(x);
+        this.command(`up ${x}`);
+    }
+
     public command(command: string, resHandler?: (err: Error | null) => void) {
+		console.log(`💻 command: ${command} ${new Date().toTimeString()}`)
         this.commandSocket.send(
             command,
             this.commandPort,
@@ -70,7 +102,8 @@ export class Drone {
             });
 
             this.commandSocket.on('message', (msg, rinfo) => {
-                console.log(`🚁✅: ${msg}`);
+
+                console.log(`🚁✅: ${msg} ${new Date().toTimeString()}`);
             });
             await new Promise((res, rej) => {
                 this.command('command', (err) => {

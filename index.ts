@@ -5,11 +5,16 @@ const main = async () => {
     const drone = new Drone();
     await drone.connect();
     drone.command('battery?');
+    drone.command('temp?');
+    await new Promise(res => setTimeout(res, 7000))
 
-    await drone.takeoff()
+    console.log('result', await drone.command('battery?'));
+    console.log('result', await drone.command('temp?'));
+    // drone.takeoff()
 
-    drone.land()
-
+    // drone.land()
+    
+    // drone.land()
 
     // setInterval(() => {
     //     drone.command('battery?');

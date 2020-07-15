@@ -62,7 +62,7 @@ export class Drone {
         );
     }
 
-    async connectToDrone(): Promise<void> {
+    async connect(): Promise<void> {
         try {
             this.commandSocket.bind(this.commandPort);
             this.commandSocket.on('error', (err) => {

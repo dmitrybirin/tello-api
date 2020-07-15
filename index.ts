@@ -3,7 +3,7 @@ import { Drone } from "./src/Drone";
 
 const main = async () => {
     const drone = new Drone();
-    await drone.connectToDrone();
+    await drone.connect();
     drone.command('streamon');
     drone.command('battery?');
     setInterval(() => {

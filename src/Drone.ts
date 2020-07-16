@@ -50,8 +50,8 @@ export class Drone {
         );
     };
 
-	public async command(command: string) {
-		return this.commands.executeCommand(command)
+	public async command(command: string, timeout?:number) {
+		return this.commands.executeCommand(command, timeout)
 	}
 
     public destroy() {
@@ -64,11 +64,11 @@ export class Drone {
     }
 
     public takeoff() {
-        return this.command('takeoff');
+        return this.command('takeoff', 20000);
     }
 
     public land() {
-        return this.command('land');
+        return this.command('land', 20000);
     }
 
     public up(x: number) {

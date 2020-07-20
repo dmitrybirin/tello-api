@@ -3,18 +3,22 @@ import { Drone } from "./src/Drone";
 
 const main = async () => {
     const drone = new Drone();
-    await drone.connect();
     try {
+        // await drone.disconnect();
+        await drone.connect();
         const temp = await drone.command('temp?');
         console.log(temp)
         const b = await drone.command('battery?');
         console.log(b)
-        await drone.takeoff()
+        // await drone.takeoff()
+        // await drone.emergency()
 
-        await drone.up(20)
-        await drone.down(30)
+        // await drone.up(20)
+        // await drone.down(30)
 
-        await drone.land()
+        // await drone.land()
+
+        // await drone.disconnect();
 
     } catch (err){
         console.error(err)

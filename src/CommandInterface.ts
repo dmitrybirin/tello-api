@@ -16,6 +16,11 @@ interface Command {
     deferredPromise: DeferredPromise<string>;
 }
 
+interface CommandReturn {
+    status: commandStatus,
+    message: string
+}
+
 export class CommandInterface {
     private commandPort: number;
     private host: string;
@@ -39,29 +44,48 @@ export class CommandInterface {
         }
     };
 
-    public async init() {
-        this.commandSocket.on('error', (err) => {
-            logger.debug(`🚁 🔴: ${err} ${new Date().toTimeString()}`);
-            this.onError(`${err}`);
-        });
+    public async init(): Promise<CommandReturn> {
+        try {
+            this.commandSocket.on('error', (err) => {
+                logger.debug(`🚁 🔴: ${err} ${new Date().toTimeString()}`);
+                this.onError(`${err}`);
+            });
+    
+            this.commandSocket.on('message', (msg, rinfo) => {
+                if (rinfo.address !== this.host && rinfo.port !== this.commandPort) {
+                    this.onMessage(msg.toString());
+                    logger.debug(`🚁: ${msg} ${new Date().toTimeString()}`);
+                }
+            });
+    
+            this.commandSocket.on('listening', () => {
+                const address = this.commandSocket.address();
+                console.log(`server listening ${address.address}:${address.port}`);
+            });
+    
+            this.commandSocket.bind(this.commandPort)
+    
+            const result = await this.executeCommand('command');
+            if(result === 'ok') {
+                return {
+                    status: commandStatus.ok,
+                    message: 'Drone is ready to recieve commands'
+                }
+            } else {
+                console.log(result)
+                return {
+                    status: commandStatus.ok,
+                    message: 'WTF'
+                }
+            }
 
-        this.commandSocket.on('message', (msg, rinfo) => {
-            this.onMessage(msg.toString());
-            logger.debug(`🚁: ${msg} ${new Date().toTimeString()}`);
-        });
-
-        this.commandSocket.on('listening', () => {
-            const address = this.commandSocket.address();
-            console.log(`server listening ${address.address}:${address.port}`);
-        });
-
-        this.commandSocket.bind({
-            address: this.host,
-            port: this.commandPort,
-            exclusive: true,
-        });
-
-        await this.executeCommand('command');
+            
+        } catch (e) {
+            return {
+                status: commandStatus.error,
+                message: 'Drone is ready to recieve commands'
+            }
+        }
     }
 
     public commands: Command[] = [];
@@ -95,7 +119,6 @@ export class CommandInterface {
                 );
                 return deferredPromise.promise;
             } catch (err) {
-                console.log('catche mfkr');
                 this.onError(err);
                 throw err;
             }

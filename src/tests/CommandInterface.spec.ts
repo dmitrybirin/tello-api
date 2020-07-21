@@ -32,6 +32,7 @@ tap.test('command executed successfully', async (t) => {
     const commandPromise = commands.executeCommand('test')
     testclient.send('ok', TEST_PORT, TEST_ADDRESS)
     const commandResult = await commandPromise
-    t.pass()
+    t.equal(commandResult.status, 'ok')
+    t.equal(commandResult.message, 'ok')
 })
 

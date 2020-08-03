@@ -5,7 +5,8 @@ const main = async () => {
     const drone = new Drone();
     try {
         // await drone.disconnect();
-        await drone.connect();
+        const t = await drone.connect();
+        console.log(t)
         const temp = await drone.command('temp?');
         console.log(temp)
         const b = await drone.command('battery?');

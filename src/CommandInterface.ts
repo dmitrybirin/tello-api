@@ -1,10 +1,17 @@
 import * as dgram from 'dgram'
 import { logger, DeferredPromise, defer } from './utils'
+import { CommandStatus } from './types'
 
-enum commandStatus {
-    error = 'error',
-    ok = 'ok',
-    inProgress = 'inProgress',
+
+// enum InterfaceStatus {
+//     ready = 'ready', // ready to new command
+//     socketReady = 'socket_ready', // connection established
+//     failed = 'failed' // unrecovered failure
+// }
+
+enum CommandType {
+    action = 'action', // answer ok/error,
+    info = 'info' // answer is info/error
 }
 
 interface Command {
@@ -12,20 +19,24 @@ interface Command {
     command: string
     endTime?: number
     response?: string
-    status: commandStatus
+    status: CommandStatus
+    type: CommandType,
     deferredPromise: DeferredPromise<string>
 }
 
 interface CommandResult {
-    status: commandStatus
+    status: CommandStatus
     message: string
+    error?: Error
 }
 
 export class CommandInterface {
-    private commandPort: number
-    private host: string
-    private defaultCommandTimeout: number = 10000
+    public commandPort: number
+    public host: string
     public commandSocket: dgram.Socket = dgram.createSocket('udp4')
+    public commands: Command[] = []
+
+    private defaultCommandTimeout: number = 10000
 
     constructor(commandPort: number, host: string, defaultCommandTimeout?: number) {
         this.commandPort = commandPort
@@ -33,124 +44,22 @@ export class CommandInterface {
         if (defaultCommandTimeout) this.defaultCommandTimeout = defaultCommandTimeout
     }
 
-    private handleSendingError = (err: Error | null) => {
-        if (err) {
-            console.error(err)
+    private createCommandErrorResult(errorMessage: string): CommandResult {
+        logger.error(`🚁😢${errorMessage}`)
+        return {
+            status: CommandStatus.error,
+            message: errorMessage,
         }
     }
 
-    public async init(): Promise<CommandResult> {
-        try {
-            this.commandSocket.on('error', (err) => {
-                logger.debug(`🚁 🔴: ${err} ${new Date().toTimeString()}`)
-                this.onError(`${err}`)
-            })
-
-            this.commandSocket.on('message', (msg, rinfo) => {
-                if (rinfo.address !== this.host && rinfo.port !== this.commandPort) {
-                    this.onMessage(msg.toString())
-                    logger.debug(`🚁: ${msg} ${new Date().toTimeString()}`)
-                }
-            })
-
-            this.commandSocket.on('listening', () => {
-                const address = this.commandSocket.address()
-                console.log(`server listening ${address.address}:${address.port}`)
-            })
-
-            this.commandSocket.bind(this.commandPort)
-
-            const result = await this.executeCommand('command')
-            if (result.message === 'ok') {
-                return {
-                    status: commandStatus.ok,
-                    message: 'Drone is ready to recieve commands',
-                }
-            } else {
-                console.log(result)
-                return {
-                    status: commandStatus.ok,
-                    message: 'WTF',
-                }
-            }
-        } catch (e) {
-            return {
-                status: commandStatus.error,
-                message: 'Drone is ready to recieve commands',
-            }
-        }
+    private onSocketError(error: string): void {
+        logger.error(`💻: socket error: ${error}`)
+        // TODO probably should reinit the connection
     }
 
-    public commands: Command[] = []
-
-    public async executeCommand(command: string, commandTimeout?: number): Promise<CommandResult> {
-        logger.info(`💻 command: ${command}`)
-        const [currentCommand] = this.commands
-        if (!currentCommand || currentCommand?.status !== commandStatus.inProgress) {
-            try {
-                const deferredPromise = defer<string>(commandTimeout || this.defaultCommandTimeout)
-                this.commands = [
-                    {
-                        command,
-                        startTime: +new Date(),
-                        status: commandStatus.inProgress,
-                        deferredPromise,
-                    },
-                    ...this.commands,
-                ]
-
-                this.commandSocket.send(command, this.commandPort, this.host, (err) =>
-                    this.handleSendingError(err)
-                )
-                try {
-                    const result = await deferredPromise.promise
-                    return {
-                        status: commandStatus.ok,
-                        message: result,
-                    }
-                } catch (commandError) {
-                    return {
-                        status: commandStatus.error,
-                        message: commandError,
-                    }
-                }
-            } catch (err) {
-                this.onError(err)
-                throw err
-            }
-        } else {
-            logger.error(
-                `Command ${command} will not be executed, ${currentCommand.command} still in progress`
-            )
-            return {
-                status: commandStatus.error,
-                message: `Command ${command} will not be executed, ${currentCommand.command} still in progress`,
-            }
-        }
-    }
-
-    public onError(error: string): void {
-        logger.error(`🚁: ${error}`)
+    private onMessage(message: string): void {
         const [currentCommand, ...restOfCommands] = this.commands
-        if (currentCommand.status === commandStatus.inProgress) {
-            if (currentCommand.deferredPromise?.timeout)
-                clearTimeout(currentCommand.deferredPromise.timeout)
-            currentCommand.deferredPromise.reject(new Error(error))
-            this.commands = [
-                {
-                    ...currentCommand,
-                    endTime: +new Date(),
-                    status: commandStatus.error,
-                    response: error,
-                },
-                ...restOfCommands,
-            ]
-        }
-    }
-
-    public onMessage(message: string): void {
-        const [currentCommand, ...restOfCommands] = this.commands
-        if (currentCommand.status === commandStatus.inProgress) {
+        if (currentCommand.status === CommandStatus.inProgress) {
             if (currentCommand.deferredPromise?.timeout)
                 clearTimeout(currentCommand.deferredPromise.timeout)
             currentCommand.deferredPromise.resolve(message)
@@ -158,7 +67,7 @@ export class CommandInterface {
                 {
                     ...currentCommand,
                     endTime: +new Date(),
-                    status: message === 'error' ? commandStatus.error : commandStatus.ok,
+                    status: message === 'error' ? CommandStatus.error : CommandStatus.ok,
                     response: message,
                 },
                 ...restOfCommands,
@@ -168,10 +77,91 @@ export class CommandInterface {
             {
                 ...currentCommand,
                 endTime: +new Date(),
-                status: commandStatus.error,
+                status: CommandStatus.error,
             },
             ...restOfCommands,
         ]
+    }
+
+    public async init(): Promise<CommandResult> {
+        try {
+
+            this.commandSocket.on('error', (err) => {
+                logger.debug(`🚁 🔴: ${err} ${new Date().toTimeString()}`)
+                this.onSocketError(err?.message || 'unknown error')
+            })
+
+            this.commandSocket.on('message', (msg, rinfo) => {
+                logger.debug(`🚁: ${msg} ${new Date().toTimeString()}`)
+                this.onMessage(msg.toString())
+            })
+
+            const result = await this.executeCommand('command')
+
+            if (result.message === 'ok') {
+                return {
+                    status: CommandStatus.ok,
+                    message: 'Drone is ready to recieve commands',
+                }
+            } else {
+                throw new Error(`'command' command return not ok: ${result.message}`)
+            }
+        } catch (e) {
+            logger.error(e)
+            return {
+                status: CommandStatus.error,
+                message: `Drone is not ready to recieve commands: ${e?.message || 'no message'}`,
+                error: e,
+            }
+        }
+    }
+
+    public async executeCommand(command: string, commandTimeout?: number): Promise<CommandResult> {
+        logger.info(`💻 command: ${command}`)
+        const [currentCommand] = this.commands
+        if (!currentCommand || currentCommand?.status !== CommandStatus.inProgress) {
+            try {
+                const commandType = command.indexOf('?') === command.length-1 ? CommandType.info : CommandType.action
+                const deferredPromise = defer<string>(commandTimeout || this.defaultCommandTimeout)
+                this.commands = [
+                    {
+                        command,
+                        startTime: +new Date(),
+                        type: commandType,
+                        status: CommandStatus.inProgress,
+                        deferredPromise,
+                    },
+                    ...this.commands,
+                ]
+
+                this.commandSocket.send(command, this.commandPort, this.host, (err) => {
+                    if (err) throw err
+                })
+
+                const result = await deferredPromise.promise
+
+                if (result === 'error') {
+                    const errorMessage = `Command '${command}' returned 'error'`
+                    return this.createCommandErrorResult(errorMessage)
+                }
+
+                if(commandType === CommandType.action && result!== 'ok') {
+                    const errorMessage = `Command '${command}' returned '${result}'. Should be only ok/error`
+                    return this.createCommandErrorResult(errorMessage)
+                }
+
+                return {
+                    status: CommandStatus.ok,
+                    message: result,
+                }
+            } catch (err) {
+                const errorMessage = `Command '${command}' failed cause of exception: ${err?.message || 'unknown message'}`
+                return this.createCommandErrorResult(errorMessage)
+            }
+        } else {
+            const errorMessage = `Command ${command} will not be executed, ${currentCommand.command} still in progress`
+            return this.createCommandErrorResult(errorMessage)
+        }
     }
 
     public close() {

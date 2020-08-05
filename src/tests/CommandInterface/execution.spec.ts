@@ -1,9 +1,9 @@
-import tap, { test } from 'tap'
+import tap from 'tap'
 import * as dgram from 'dgram'
 
 import { CommandInterface } from '../../CommandInterface'
-import { AddressInfo } from 'net'
 import { CommandStatus } from '../../types'
+import { sendFromServerOnCommand } from '../test-utils'
 
 const TEST_PORT: number = 4269
 const TEST_ADDRESS: string = 'localhost'
@@ -12,17 +12,9 @@ const testServer = dgram.createSocket('udp4')
 testServer.bind(TEST_PORT)
 testServer.unref()
 
-testServer.on('error', (err) => console.log('ERROR', err))
-
-const sendFromServerOnCommand = async (testServer: dgram.Socket, message: string) =>
-    new Promise((res) => {
-        testServer.once('message', (msg, info: AddressInfo) => {
-            testServer.send(message, info.port, info.address, () => res())
-        })
-    })
 
 tap.beforeEach(async (done, t) => {
-    const comInterface = new CommandInterface(TEST_PORT, TEST_ADDRESS)
+    const comInterface = new CommandInterface(TEST_PORT, TEST_ADDRESS, 1000)
     const initPromise = comInterface.init()
     await sendFromServerOnCommand(testServer, 'ok')
     t.context.commands = comInterface
@@ -101,7 +93,17 @@ tap.test('test one before another ends should fail', async (t) => {
         status: CommandStatus.ok,
         message: serverAnswer,
     })
+
     t.equal(resultTwo.status, CommandStatus.error)
     t.matchSnapshot(resultTwo)
+    t.done()
+})
+
+
+tap.test('test action command timeouted', async (t) => {
+    const commandPromise = t.context.commands.executeCommand('test')
+    const result = await commandPromise
+    t.equal(result.status, CommandStatus.error)
+    t.matchSnapshot(result)
     t.done()
 })

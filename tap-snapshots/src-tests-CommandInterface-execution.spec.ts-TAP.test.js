@@ -7,28 +7,42 @@
 'use strict'
 exports[`src/tests/CommandInterface/execution.spec.ts TAP test action command returns error > must match snapshot 1`] = `
 Object {
-  "message": "Command 'test' returned 'error'",
+  "errorMessage": "Command 'test' returned 'error'",
+  "message": "error",
   "status": "error",
 }
 `
 
 exports[`src/tests/CommandInterface/execution.spec.ts TAP test action command returns not ok/error > must match snapshot 1`] = `
 Object {
-  "message": "Command 'test' returned 'not expected'. Should be only ok/error",
+  "errorMessage": "Command 'test' returned 'not expected'. Should be only ok/error",
+  "message": "not expected",
   "status": "error",
 }
 `
 
 exports[`src/tests/CommandInterface/execution.spec.ts TAP test action command throws error > must match snapshot 1`] = `
 Object {
-  "message": "Command 'test' failed cause of exception: OOPS",
+  "errorMessage": "Command 'test' failed cause of exception: OOPS",
+  "exception": Error: OOPS,
+  "message": null,
+  "status": "error",
+}
+`
+
+exports[`src/tests/CommandInterface/execution.spec.ts TAP test action command timeouted > must match snapshot 1`] = `
+Object {
+  "errorMessage": "Command 'test' failed cause of exception: timeout after 1000 ms",
+  "exception": Error: timeout after 1000 ms,
+  "message": null,
   "status": "error",
 }
 `
 
 exports[`src/tests/CommandInterface/execution.spec.ts TAP test one before another ends should fail > must match snapshot 1`] = `
 Object {
-  "message": "Command test2 will not be executed, test1 still in progress",
+  "errorMessage": "Command test2 will not be executed, test1 still in progress",
+  "message": null,
   "status": "error",
 }
 `

@@ -26,8 +26,9 @@ interface Command {
 
 interface CommandResult {
     status: CommandStatus
-    message: string
-    error?: Error
+    message: string | null
+    errorMessage?: string
+    exception?: Error
 }
 
 export class CommandInterface {
@@ -44,12 +45,21 @@ export class CommandInterface {
         if (defaultCommandTimeout) this.defaultCommandTimeout = defaultCommandTimeout
     }
 
-    private createCommandErrorResult(errorMessage: string): CommandResult {
+    private createCommandErrorResult(rawMessage: string | null, errorMessage: string, rawError?: Error): CommandResult {
         logger.error(`🚁😢${errorMessage}`)
-        return {
+        
+        const commonMessage = {
             status: CommandStatus.error,
-            message: errorMessage,
+            message: rawMessage,
+            errorMessage,
         }
+
+        if (rawError) {
+            return {...commonMessage, exception: rawError}
+        } else {
+            return commonMessage
+        }
+
     }
 
     private onSocketError(error: string): void {
@@ -97,22 +107,31 @@ export class CommandInterface {
             })
 
             const result = await this.executeCommand('command')
-
-            if (result.message === 'ok') {
-                return {
-                    status: CommandStatus.ok,
-                    message: 'Drone is ready to recieve commands',
+            
+            if (result.status === CommandStatus.ok) {
+                if (result.message === 'ok') {
+                    return {
+                        status: CommandStatus.ok,
+                        message: 'Drone is ready to recieve commands',
+                    }
+                } else {
+                    const errorMessage = `Drone is not ready to recieve commands. Command 'command' returned '${result.message}'.`
+                    return this.createCommandErrorResult(result.message, errorMessage)
                 }
-            } else {
-                throw new Error(`'command' command return not ok: ${result.message}`)
             }
-        } catch (e) {
-            logger.error(e)
-            return {
-                status: CommandStatus.error,
-                message: `Drone is not ready to recieve commands: ${e?.message || 'no message'}`,
-                error: e,
+            
+            if (result.status === CommandStatus.error) {
+                const {exception, errorMessage: originalErrorMessage} = result
+                const errorMessage = `Drone is not ready to recieve commands. ${originalErrorMessage}`
+                    return this.createCommandErrorResult(result.message, errorMessage, exception)
             }
+
+            const errorMessage = `Drone is not ready to recieve commands: Unknown status ${result.status}`
+            return this.createCommandErrorResult(null, errorMessage)
+            
+        } catch (err) {
+            const errorMessage = `Drone is not ready to recieve commands: ${err?.message || 'no message'}`
+            return this.createCommandErrorResult(null, errorMessage, err)
         }
     }
 
@@ -142,12 +161,12 @@ export class CommandInterface {
 
                 if (result === 'error') {
                     const errorMessage = `Command '${command}' returned 'error'`
-                    return this.createCommandErrorResult(errorMessage)
+                    return this.createCommandErrorResult(result, errorMessage)
                 }
 
                 if(commandType === CommandType.action && result!== 'ok') {
                     const errorMessage = `Command '${command}' returned '${result}'. Should be only ok/error`
-                    return this.createCommandErrorResult(errorMessage)
+                    return this.createCommandErrorResult(result, errorMessage)
                 }
 
                 return {
@@ -156,11 +175,11 @@ export class CommandInterface {
                 }
             } catch (err) {
                 const errorMessage = `Command '${command}' failed cause of exception: ${err?.message || 'unknown message'}`
-                return this.createCommandErrorResult(errorMessage)
+                return this.createCommandErrorResult(null, errorMessage, err)
             }
         } else {
             const errorMessage = `Command ${command} will not be executed, ${currentCommand.command} still in progress`
-            return this.createCommandErrorResult(errorMessage)
+            return this.createCommandErrorResult(null ,errorMessage)
         }
     }
 

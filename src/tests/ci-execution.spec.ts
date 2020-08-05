@@ -1,9 +1,9 @@
 import tap from 'tap'
 import * as dgram from 'dgram'
 
-import { CommandInterface } from '../../CommandInterface'
-import { CommandStatus } from '../../types'
-import { sendFromServerOnCommand } from '../test-utils'
+import { CommandInterface } from '../CommandInterface'
+import { CommandStatus } from '../types'
+import { sendFromServerOnCommand } from './test-utils'
 
 const TEST_PORT: number = 4269
 const TEST_ADDRESS: string = 'localhost'

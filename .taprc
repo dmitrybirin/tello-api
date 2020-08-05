@@ -1,0 +1,14 @@
+check-coverage: true
+branches: 70
+functions: 70
+lines: 70
+statements: 70
+color: true
+comments: false
+coverage: true
+rcfile: /Users/dmitrybirin/code/tello/tello-api/.taprc
+test-regex: (\/|^)tests\/.*.spec.ts$
+timeout: 30
+jobs: 1
+ts: true
+

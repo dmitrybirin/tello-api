@@ -46,3 +46,27 @@ Object {
   "status": "error",
 }
 `
+
+exports[`src/tests/ci-execution.spec.ts TAP try to run command after emmiting error to socket > must match snapshot 1`] = `
+Object {
+  "errorMessage": "Interface is in failed status, please reinit",
+  "message": null,
+  "status": "error",
+}
+`
+
+exports[`src/tests/ci-execution.spec.ts TAP try to run command after interface failed by timeout > must match snapshot 1`] = `
+Object {
+  "errorMessage": "Interface is in failed status, please reinit",
+  "message": null,
+  "status": "error",
+}
+`
+
+exports[`src/tests/ci-execution.spec.ts TAP try to run command without init > must match snapshot 1`] = `
+Object {
+  "errorMessage": "Interface is in the initial status, please init to send commands",
+  "message": null,
+  "status": "error",
+}
+`

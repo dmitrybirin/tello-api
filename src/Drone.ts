@@ -102,4 +102,13 @@ export class Drone {
             this.status = droneStatus.error;
         }
     }
+
+    async disconnect(): Promise<void> {
+        try {
+			await this.commands.close()
+        } catch (error) {
+            logger.error(error);
+            this.status = droneStatus.error;
+        }
+    }
 }

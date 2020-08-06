@@ -14,7 +14,7 @@ testServer.unref()
 
 
 tap.beforeEach(async (done, t) => {
-    const comInterface = new CommandInterface(TEST_PORT, TEST_ADDRESS, 1000)
+    const comInterface = new CommandInterface(TEST_PORT, TEST_ADDRESS, 0, 1000)
     const initPromise = comInterface.init()
     await sendFromServerOnCommand(testServer, 'ok')
     await initPromise

@@ -27,17 +27,24 @@ interface CommandResult {
 
 export class CommandInterface {
     public status: InterfaceStatus = InterfaceStatus.initial
-    public commandPort: number
-    public host: string
+    public clientPort: number
+    public targetPort: number
+    public targetHost: string
     public commandSocket: dgram.Socket = dgram.createSocket('udp4')
     public commands: Command[] = []
 
     private defaultCommandTimeout: number = 10000
 
-    constructor(commandPort: number, host: string, defaultCommandTimeout?: number) {
-        this.commandPort = commandPort
-        this.host = host
+    constructor(targetPort: number, targetHost: string, clientPort?: number, defaultCommandTimeout?: number) {
+        this.targetPort = targetPort
+        if(clientPort === 0 || clientPort) {
+            this.clientPort = clientPort
+        } else {
+            this.clientPort = 9888
+        }
+        this.targetHost = targetHost
         if (defaultCommandTimeout) this.defaultCommandTimeout = defaultCommandTimeout
+        this.commandSocket.bind(this.clientPort)
     }
 
     private createCommandErrorResult(rawMessage: string | null, errorMessage: string, rawError?: Error): CommandResult {
@@ -84,6 +91,11 @@ export class CommandInterface {
 
     public async init(): Promise<CommandResult> {
         try {
+            
+
+            this.commandSocket.once('listening', () => {
+                logger.debug(`💻 listening on ${this.commandSocket.address().port}`)
+            })
 
             this.commandSocket.on('error', (err) => {
                 this.onSocketError(err?.message || 'unknown error')
@@ -93,7 +105,7 @@ export class CommandInterface {
                 logger.debug(`🚁: ${msg} ${new Date().toTimeString()}`)
                 this.onMessage(msg.toString())
             })
-
+            
             const result = await this.executeCommand('command')
             
             if (result.status === CommandStatus.ok) {
@@ -148,7 +160,7 @@ export class CommandInterface {
                         ...this.commands,
                     ]
     
-                    this.commandSocket.send(command, this.commandPort, this.host, (err) => {
+                    this.commandSocket.send(command, this.targetPort, this.targetHost, (err) => {
                         if (err) throw err
                     })
     
@@ -169,6 +181,15 @@ export class CommandInterface {
                         message: result,
                     }
                 } catch (err) {
+                    this.commands = [
+                        
+                        {
+                            ...currentCommand,
+                            endTime: +new Date(),
+                            status: CommandStatus.error,
+                        },
+                        ...this.commands,
+                    ]
                     const errorMessage = `Command '${command}' failed cause of exception: ${err?.message || 'unknown message'}`
                     return this.createCommandErrorResult(null, errorMessage, err)
                 }

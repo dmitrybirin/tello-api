@@ -13,7 +13,7 @@ testServer.bind(TEST_PORT)
 testServer.unref()
 
 tap.beforeEach((done, t) => {
-    t.context.commands = new CommandInterface(TEST_PORT, TEST_ADDRESS, 1000);
+    t.context.commands = new CommandInterface(TEST_PORT, TEST_ADDRESS, 0, 1000)
     done()
 })
 

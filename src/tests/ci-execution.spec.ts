@@ -109,7 +109,7 @@ tap.test('test action command timeouted', async (t) => {
 })
 
 tap.test('try to run command without init', async (t) => {
-    const comInterface = new CommandInterface(TEST_PORT+1, TEST_ADDRESS, 1000)
+    const comInterface = new CommandInterface(TEST_PORT, TEST_ADDRESS, 0, 1000)
     const result = await comInterface.executeCommand('test')
     t.equal(result.status, CommandStatus.error)
     t.matchSnapshot(result)
@@ -118,7 +118,7 @@ tap.test('try to run command without init', async (t) => {
 })
 
 tap.test('try to run command after interface failed by timeout', async (t) => {
-    const comInterface = new CommandInterface(TEST_PORT+1, TEST_ADDRESS, 1000)
+    const comInterface = new CommandInterface(TEST_PORT, TEST_ADDRESS, 0, 1000)
     await comInterface.init()
     const result = await comInterface.executeCommand('test')
     t.equal(result.status, CommandStatus.error)

@@ -1,4 +1,4 @@
-import { Drone } from "./src/Drone";
+import { Drone } from './src/Drone';
 
 const main = async () => {
     const drone = new Drone();
@@ -6,11 +6,11 @@ const main = async () => {
         // await drone.disconnect();
         await drone.connect();
         const temp = await drone.command('temp?');
-        console.log(temp)
+        console.log(temp);
         const b = await drone.command('battery?');
-        console.log(b)
-        const state = drone.getState()
-        console.log(state)
+        console.log(b);
+        const state = drone.getState();
+        console.log(state);
 
         // await drone.takeoff()
         // await drone.emergency()
@@ -21,22 +21,20 @@ const main = async () => {
         // await drone.down(100)
 
         // await drone.land()
-        
-        // await drone.emergency()
-        
-        // await drone.disconnect();
 
-    } catch (err){
-        console.error(err)
+        // await drone.emergency()
+
+        // await drone.disconnect();
+    } catch (err) {
+        console.error(err);
     }
-    
 
     // await new Promise(res => setTimeout(res, 7000))
 
     // drone.takeoff()
 
     // drone.land()
-    
+
     // drone.land()
 
     // setInterval(() => {

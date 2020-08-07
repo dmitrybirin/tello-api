@@ -8,8 +8,15 @@ export enum CommandStatus {
     inProgress = 'inProgress',
 }
 
+export interface CommandResult {
+    status: CommandStatus;
+    message: string | null;
+    errorMessage?: string;
+    exception?: Error;
+}
+
 export enum InterfaceStatus {
     initial = 'initial',
     ready = 'ready', // ready to new command
-    failed = 'failed' // unrecovered failure
+    failed = 'failed', // unrecovered failure
 }

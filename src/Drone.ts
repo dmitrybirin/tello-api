@@ -1,10 +1,8 @@
 import * as dgram from 'dgram';
 import { wait, logger } from './utils';
 import { CommandInterface } from './CommandInterface';
-
-interface DroneState {
-    [key: string]: number;
-}
+import { StateInterface } from './StateInterface';
+import { DroneState } from './types';
 
 enum droneStatus {
     error = 'ERROR',
@@ -14,13 +12,13 @@ enum droneStatus {
 
 export class Drone {
     public stateSocket: dgram.Socket = dgram.createSocket('udp4');
-    public state: DroneState = {};
     public status: droneStatus = droneStatus.disconnected;
     private host: string = '192.168.10.1';
     private commandPort: number = 8889;
     private statePort: number = 8890;
 
-    private commands: CommandInterface  = new CommandInterface(this.commandPort, this.host);
+    private commandsInterface: CommandInterface = new CommandInterface(this.commandPort, this.host);
+    private stateInterface: StateInterface = new StateInterface(this.statePort);
 
     private upperDistanceLimit: number = 500;
     private lowerDistanceLimit: number = 20;
@@ -38,26 +36,11 @@ export class Drone {
             );
     };
 
-    private parseString = (str: string): DroneState => {
-        return Object.fromEntries(
-            str
-                .trim()
-                .split(';')
-                .map((keyValue) => {
-                    const [k, v] = keyValue.split(':');
-                    return [k, parseInt(v, 10)];
-                })
-        );
-    };
+   
 
 	public async command(command: string, timeout?:number) {
-		return this.commands.executeCommand(command, timeout)
+		return this.commandsInterface.executeCommand(command, timeout)
 	}
-
-    public destroy() {
-        this.stateSocket.removeAllListeners();
-        this.status = droneStatus.disconnected;
-    }
 
     public emergency() {
         return this.command('emergency', 2000);
@@ -83,24 +66,14 @@ export class Drone {
 
     async connect(): Promise<void> {
         try {
-            const result = await this.commands.init()
+            
+            const result = await this.commandsInterface.init()
             if (result.status !== 'ok') {
                 throw new Error(result.errorMessage);
             } else {
                 logger.info(`${result.message}`)
             }
-
-            this.stateSocket.bind(this.statePort);
-            this.stateSocket.on('message', (msg) => {
-                this.state = {
-                    ...this.state,
-                    ...this.parseString(msg.toString()),
-                };
-            });
-
-            this.stateSocket.on('error', (err) => {
-                logger.error(`State error 😢:\n${err.stack}`);
-            });
+            this.stateInterface.init()
 
             this.status = droneStatus.connected;
         } catch (error) {
@@ -109,11 +82,15 @@ export class Drone {
         }
     }
 
+    public getState(): DroneState {
+        return this.stateInterface.state
+    }
+
     async disconnect(): Promise<void> {
         try {
-            await this.commands.close()
-            this.stateSocket.unref()
-            this.stateSocket.removeAllListeners()
+            this.commandsInterface.close()
+            this.stateInterface.close()
+            this.status = droneStatus.disconnected;
         } catch (error) {
             logger.error(error);
             this.status = droneStatus.error;

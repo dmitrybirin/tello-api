@@ -1,3 +1,7 @@
+export interface DroneState {
+    [key: string]: number;
+}
+
 export enum CommandStatus {
     error = 'error',
     ok = 'ok',

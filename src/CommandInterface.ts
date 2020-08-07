@@ -27,7 +27,7 @@ interface CommandResult {
 
 export class CommandInterface {
     public status: InterfaceStatus = InterfaceStatus.initial
-    public clientPort: number
+    public clientPort: number = 9888
     public targetPort: number
     public targetHost: string
     public commandSocket: dgram.Socket = dgram.createSocket('udp4')
@@ -37,14 +37,12 @@ export class CommandInterface {
 
     constructor(targetPort: number, targetHost: string, clientPort?: number, defaultCommandTimeout?: number) {
         this.targetPort = targetPort
-        if(clientPort === 0 || clientPort) {
-            this.clientPort = clientPort
-        } else {
-            this.clientPort = 9888
-        }
         this.targetHost = targetHost
-        if (defaultCommandTimeout) this.defaultCommandTimeout = defaultCommandTimeout
+
+        if(clientPort === 0 || clientPort) this.clientPort = clientPort
         this.commandSocket.bind(this.clientPort)
+
+        if (defaultCommandTimeout) this.defaultCommandTimeout = defaultCommandTimeout
     }
 
     private createCommandErrorResult(rawMessage: string | null, errorMessage: string, rawError?: Error): CommandResult {
@@ -92,9 +90,10 @@ export class CommandInterface {
     public async init(): Promise<CommandResult> {
         try {
             
-
             this.commandSocket.once('listening', () => {
-                logger.debug(`💻 listening on ${this.commandSocket.address().port}`)
+                const port = this.commandSocket.address().port
+                this.clientPort = port
+                logger.debug(`💻 listening on ${port}`)
             })
 
             this.commandSocket.on('error', (err) => {

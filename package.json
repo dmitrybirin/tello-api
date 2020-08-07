@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc",
-    "test": "tap --coverage-report=html --no-browser"
+    "test": "tap"
   },
   "keywords": [],
   "author": "",

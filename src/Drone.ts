@@ -34,7 +34,7 @@ export class Drone {
     private checkForDistanceLimit = (value: number) => {
         if (value < this.lowerDistanceLimit || value > this.upperDistanceLimit)
             console.error(
-                `Out of range, need to be between ${this.lowerDistanceLimit} and ${this.lowerDistanceLimit}`
+                `Out of range, need to be between ${this.lowerDistanceLimit} and ${this.upperDistanceLimit}`
             );
     };
 
@@ -60,7 +60,7 @@ export class Drone {
     }
 
     public emergency() {
-        return this.command('emergency');
+        return this.command('emergency', 2000);
     }
 
     public takeoff() {
@@ -78,12 +78,18 @@ export class Drone {
 
     public down(x: number) {
         this.checkForDistanceLimit(x);
-        return this.command(`up ${x}`);
+        return this.command(`down ${x}`);
     }
 
     async connect(): Promise<void> {
         try {
-			await this.commands.init()
+            const result = await this.commands.init()
+            if (result.status !== 'ok') {
+                throw new Error(result.errorMessage);
+            } else {
+                logger.info(`${result.message}`)
+            }
+
             this.stateSocket.bind(this.statePort);
             this.stateSocket.on('message', (msg) => {
                 this.state = {
@@ -105,7 +111,9 @@ export class Drone {
 
     async disconnect(): Promise<void> {
         try {
-			await this.commands.close()
+            await this.commands.close()
+            this.stateSocket.unref()
+            this.stateSocket.removeAllListeners()
         } catch (error) {
             logger.error(error);
             this.status = droneStatus.error;

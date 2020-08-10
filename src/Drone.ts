@@ -10,6 +10,11 @@ enum droneStatus {
     disconnected = 'DISCONNECTED',
 }
 
+enum Rotation {
+    cw = 'cw',
+    ccw = 'ccw',
+}
+
 export class Drone {
     public stateSocket: dgram.Socket = dgram.createSocket('udp4');
     public status: droneStatus = droneStatus.disconnected;
@@ -20,8 +25,11 @@ export class Drone {
     private commandsInterface: CommandInterface = new CommandInterface(this.commandPort, this.host);
     private stateInterface: StateInterface = new StateInterface(this.statePort);
 
-    private upperDistanceLimit = 500;
     private lowerDistanceLimit = 20;
+    private upperDistanceLimit = 500;
+
+    private lowerRotationLimit = 20;
+    private upperRotationLimit = 500;
 
     constructor(host?: string, commandPort?: number, statePort?: number) {
         if (host) this.host = host;
@@ -30,8 +38,22 @@ export class Drone {
     }
 
     private checkForDistanceLimit = (value: number) => {
-        if (value < this.lowerDistanceLimit || value > this.upperDistanceLimit)
-            console.error(`Out of range, need to be between ${this.lowerDistanceLimit} and ${this.upperDistanceLimit}`);
+        if (value < this.lowerDistanceLimit || value > this.upperDistanceLimit) {
+            throw new Error(
+                `Out of range, need to be between ${this.lowerDistanceLimit} and ${this.upperDistanceLimit}`,
+            );
+        }
+    };
+
+    private checkForRotationInput = (degrees: number, direction?: Rotation) => {
+        if (degrees < this.lowerRotationLimit || degrees > this.upperRotationLimit) {
+            throw new Error(
+                `Degrees out of range, need to be between ${this.lowerRotationLimit} and ${this.upperRotationLimit}`,
+            );
+        }
+        if (direction && !(direction in Rotation)) {
+            throw new Error(`Direction out of range, should be either ${Rotation.cw} or ${Rotation.cw}`);
+        }
     };
 
     public async command(command: string, timeout?: number): Promise<CommandResult> {
@@ -58,6 +80,35 @@ export class Drone {
     public down(x: number): Promise<CommandResult> {
         this.checkForDistanceLimit(x);
         return this.command(`down ${x}`);
+    }
+
+    public left(x: number): Promise<CommandResult> {
+        this.checkForDistanceLimit(x);
+        return this.command(`left ${x}`);
+    }
+
+    public right(x: number): Promise<CommandResult> {
+        this.checkForDistanceLimit(x);
+        return this.command(`right ${x}`);
+    }
+
+    public forward(x: number): Promise<CommandResult> {
+        this.checkForDistanceLimit(x);
+        return this.command(`forward ${x}`);
+    }
+
+    public back(x: number): Promise<CommandResult> {
+        this.checkForDistanceLimit(x);
+        return this.command(`back ${x}`);
+    }
+
+    public rotate(degrees: number, direction?: Rotation): Promise<CommandResult> {
+        this.checkForRotationInput(degrees, direction);
+        if (direction) {
+            return this.command(`${direction} ${degrees}`);
+        } else {
+            return this.command(`${Rotation.cw} ${degrees}`);
+        }
     }
 
     async connect(): Promise<void> {

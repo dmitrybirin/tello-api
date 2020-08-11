@@ -20,22 +20,12 @@ interface Command {
 export class CommandInterface {
     public status: InterfaceStatus = InterfaceStatus.initial;
     public clientPort = 9888;
-    public targetPort: number;
-    public targetHost: string;
+    public targetPort = 8889;
+    public targetHost = 'localhost';
     public commandSocket: dgram.Socket = dgram.createSocket('udp4');
     public commands: Command[] = [];
 
     private defaultCommandTimeout = 10000;
-
-    constructor(targetPort: number, targetHost: string, clientPort?: number, defaultCommandTimeout?: number) {
-        this.targetPort = targetPort;
-        this.targetHost = targetHost;
-
-        if (clientPort === 0 || clientPort) this.clientPort = clientPort;
-        this.commandSocket.bind(this.clientPort);
-
-        if (defaultCommandTimeout) this.defaultCommandTimeout = defaultCommandTimeout;
-    }
 
     private createCommandErrorResult(rawMessage: string | null, errorMessage: string, rawError?: Error): CommandResult {
         logger.error(`🚁😢${errorMessage}`);
@@ -77,8 +67,21 @@ export class CommandInterface {
         }
     }
 
-    public async init(): Promise<CommandResult> {
+    public async init(
+        targetPort: number,
+        targetHost: string,
+        clientPort?: number,
+        defaultCommandTimeout?: number,
+    ): Promise<CommandResult> {
         try {
+            this.targetPort = targetPort;
+            this.targetHost = targetHost;
+
+            if (clientPort === 0 || clientPort) this.clientPort = clientPort;
+            this.commandSocket.bind(this.clientPort);
+
+            if (defaultCommandTimeout) this.defaultCommandTimeout = defaultCommandTimeout;
+
             this.commandSocket.once('listening', () => {
                 const port = this.commandSocket.address().port;
                 this.clientPort = port;

@@ -12,15 +12,17 @@ const main = async () => {
         const state = drone.getState();
         console.log(state);
 
-        // await drone.takeoff()
-        // await drone.emergency()
+        await drone.takeoff();
 
-        // await drone.up(20)
-        // await drone.up(20)
-        // await drone.up(20)
-        // await drone.down(100)
+        await drone.rotate(3600);
+        // await drone.up(100);
+        // await drone.down(100);
+        // await drone.left(50);
+        // await drone.right(50);
+        // await drone.forward(50);
+        // await drone.back(50);
 
-        // await drone.land()
+        await drone.land();
 
         // await drone.emergency()
 

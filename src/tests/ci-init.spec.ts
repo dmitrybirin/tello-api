@@ -13,7 +13,7 @@ testServer.bind(TEST_PORT);
 testServer.unref();
 
 tap.beforeEach((done, t) => {
-    t.context.commands = new CommandInterface(TEST_PORT, TEST_ADDRESS, 0, 1000);
+    t.context.commands = new CommandInterface();
     done();
 });
 
@@ -24,7 +24,7 @@ tap.afterEach((done, t) => {
 
 tap.test('init executed successfully', async (t) => {
     t.equal(t.context.commands.status, InterfaceStatus.initial);
-    const initPromise = t.context.commands.init();
+    const initPromise = t.context.commands.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
 
     await sendFromServerOnCommand(testServer, 'ok');
 
@@ -36,7 +36,7 @@ tap.test('init executed successfully', async (t) => {
 });
 
 tap.test('initial command returned not ok', async (t) => {
-    const initPromise = t.context.commands.init();
+    const initPromise = t.context.commands.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
     await sendFromServerOnCommand(testServer, 'error');
     const result = await initPromise;
 
@@ -47,7 +47,7 @@ tap.test('initial command returned not ok', async (t) => {
 });
 
 tap.test('initial command throws error', async (t) => {
-    const initPromise = t.context.commands.init();
+    const initPromise = t.context.commands.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
     await sendFromServerOnCommand(testServer, 'ok');
     const [current] = t.context.commands.commands;
     current.deferredPromise.reject(new Error('OOPS'));
@@ -61,7 +61,7 @@ tap.test('initial command throws error', async (t) => {
 });
 
 tap.test('initial command timeouted', async (t) => {
-    const initPromise = t.context.commands.init();
+    const initPromise = t.context.commands.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
     const result = await initPromise;
 
     t.equal(result.status, CommandStatus.error);

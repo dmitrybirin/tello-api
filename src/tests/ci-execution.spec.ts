@@ -13,8 +13,8 @@ testServer.bind(TEST_PORT);
 testServer.unref();
 
 tap.beforeEach(async (done, t) => {
-    const comInterface = new CommandInterface(TEST_PORT, TEST_ADDRESS, 0, 1000);
-    const initPromise = comInterface.init();
+    const comInterface = new CommandInterface();
+    const initPromise = comInterface.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
     await sendFromServerOnCommand(testServer, 'ok');
     await initPromise;
     t.context.commands = comInterface;
@@ -107,7 +107,7 @@ tap.test('test action command timeouted', async (t) => {
 });
 
 tap.test('try to run command without init', async (t) => {
-    const comInterface = new CommandInterface(TEST_PORT, TEST_ADDRESS, 0, 1000);
+    const comInterface = new CommandInterface();
     const result = await comInterface.executeCommand('test');
     t.equal(result.status, CommandStatus.error);
     t.matchSnapshot(result);
@@ -116,8 +116,8 @@ tap.test('try to run command without init', async (t) => {
 });
 
 tap.test('try to run command after interface failed by timeout', async (t) => {
-    const comInterface = new CommandInterface(TEST_PORT, TEST_ADDRESS, 0, 1000);
-    await comInterface.init();
+    const comInterface = new CommandInterface();
+    await comInterface.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
     const result = await comInterface.executeCommand('test');
     t.equal(result.status, CommandStatus.error);
     t.matchSnapshot(result);

@@ -22,14 +22,14 @@ export class Drone {
     private commandPort = 8889;
     private statePort = 8890;
 
-    private commandsInterface: CommandInterface = new CommandInterface(this.commandPort, this.host);
-    private stateInterface: StateInterface = new StateInterface(this.statePort);
+    private commandsInterface: CommandInterface = new CommandInterface();
+    private stateInterface: StateInterface = new StateInterface();
 
     private lowerDistanceLimit = 20;
     private upperDistanceLimit = 500;
 
-    private lowerRotationLimit = 20;
-    private upperRotationLimit = 500;
+    private lowerRotationLimit = 1;
+    private upperRotationLimit = 3600;
 
     constructor(host?: string, commandPort?: number, statePort?: number) {
         if (host) this.host = host;
@@ -40,7 +40,7 @@ export class Drone {
     private checkForDistanceLimit = (value: number) => {
         if (value < this.lowerDistanceLimit || value > this.upperDistanceLimit) {
             throw new Error(
-                `Out of range, need to be between ${this.lowerDistanceLimit} and ${this.upperDistanceLimit}`,
+                `Out of range, should be between ${this.lowerDistanceLimit} and ${this.upperDistanceLimit}`,
             );
         }
     };
@@ -48,11 +48,11 @@ export class Drone {
     private checkForRotationInput = (degrees: number, direction?: Rotation) => {
         if (degrees < this.lowerRotationLimit || degrees > this.upperRotationLimit) {
             throw new Error(
-                `Degrees out of range, need to be between ${this.lowerRotationLimit} and ${this.upperRotationLimit}`,
+                `Degrees out of range, should be between ${this.lowerRotationLimit} and ${this.upperRotationLimit}`,
             );
         }
         if (direction && !(direction in Rotation)) {
-            throw new Error(`Direction out of range, should be either ${Rotation.cw} or ${Rotation.cw}`);
+            throw new Error(`Direction out of range, should be either '${Rotation.cw}' or '${Rotation.cw}'`);
         }
     };
 
@@ -113,13 +113,13 @@ export class Drone {
 
     async connect(): Promise<void> {
         try {
-            const result = await this.commandsInterface.init();
+            const result = await this.commandsInterface.init(this.commandPort, this.host);
             if (result.status !== 'ok') {
                 throw new Error(result.errorMessage);
             } else {
                 logger.info(`${result.message}`);
             }
-            this.stateInterface.init();
+            this.stateInterface.init(this.statePort);
 
             this.status = droneStatus.connected;
         } catch (error) {

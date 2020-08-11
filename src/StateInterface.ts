@@ -4,14 +4,9 @@ import { logger } from './utils';
 
 export class StateInterface {
     public status: InterfaceStatus = InterfaceStatus.initial;
-    public bindingPort: number;
+    public bindingPort = 0;
     public socket: dgram.Socket = dgram.createSocket('udp4');
     public state: DroneState = {};
-
-    constructor(bindingPort: number) {
-        this.bindingPort = bindingPort;
-        this.socket.bind(this.bindingPort);
-    }
 
     private parseString = (str: string): DroneState => {
         return Object.fromEntries(
@@ -25,7 +20,14 @@ export class StateInterface {
         );
     };
 
-    public init(): void {
+    public init(bindingPort: number): void {
+        if (bindingPort !== 0) {
+            this.bindingPort = bindingPort;
+            this.socket = dgram.createSocket('udp4');
+        }
+
+        this.socket.bind(this.bindingPort);
+
         this.socket.on('message', (msg) => {
             this.state = {
                 ...this.state,
@@ -41,7 +43,7 @@ export class StateInterface {
     }
 
     public close(): void {
-        this.socket.unref();
-        this.socket.removeAllListeners();
+        this.socket?.unref();
+        this.socket?.removeAllListeners();
     }
 }

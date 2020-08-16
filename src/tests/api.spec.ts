@@ -86,6 +86,13 @@ directCommandsWithTimeout.map((testData) => {
 
 const moveCommands = ['up', 'down', 'left', 'right', 'forward', 'back'];
 
+const flipCommands = {
+    left: 'l',
+    right: 'r',
+    forward: 'f',
+    back: 'b',
+};
+
 moveCommands.map((command) => {
     tap.test(`'${command}' command success`, async (t) => {
         const distance = 42;
@@ -164,6 +171,17 @@ tap.test(`'rotate' command failed: rotate type wrong`, async (t) => {
     );
     t.isEqual(commandFake.called, false);
     t.done();
+});
+
+Object.entries(flipCommands).map(([key, value]: [string, string]) => {
+    tap.test(`'flip ${key}' command success`, async (t) => {
+        const commandFake = sinon.fake();
+        sinon.replace(tap.context.client, 'command', commandFake);
+        tap.context.client.flip[key]();
+        t.isEqual(commandFake.called, true);
+        t.deepEqual(commandFake.args[0], [`flip ${value}`]);
+        t.done();
+    });
 });
 
 tap.tearDown(() => {

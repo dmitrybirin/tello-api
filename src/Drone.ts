@@ -15,6 +15,20 @@ enum Rotation {
     ccw = 'ccw',
 }
 
+interface FlipInterface {
+    left: () => Promise<CommandResult>;
+    right: () => Promise<CommandResult>;
+    forward: () => Promise<CommandResult>;
+    back: () => Promise<CommandResult>;
+}
+
+enum Flip {
+    left = 'l',
+    right = 'r',
+    forward = 'f',
+    back = 'b',
+}
+
 export class Drone {
     public stateSocket: dgram.Socket = dgram.createSocket('udp4');
     public status: droneStatus = droneStatus.disconnected;
@@ -101,6 +115,13 @@ export class Drone {
         this.checkForDistanceLimit(x);
         return this.command(`back ${x}`);
     }
+
+    public flip: FlipInterface = {
+        left: () => this.command(`flip ${Flip.left}`),
+        right: () => this.command(`flip ${Flip.right}`),
+        back: () => this.command(`flip ${Flip.back}`),
+        forward: () => this.command(`flip ${Flip.forward}`),
+    };
 
     public rotate(degrees: number, direction?: Rotation): Promise<CommandResult> {
         this.checkForRotationInput(degrees, direction);

@@ -14,7 +14,11 @@ const main = async () => {
 
         await drone.takeoff();
 
-        await drone.rotate(3600);
+        // await drone.rotate(360);
+        await drone.flip.back();
+        await drone.flip.forward();
+        await drone.flip.left();
+        await drone.flip.right();
         // await drone.up(100);
         // await drone.down(100);
         // await drone.left(50);

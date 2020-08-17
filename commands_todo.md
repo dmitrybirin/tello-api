@@ -24,7 +24,7 @@
 
 - [x] ccw x Tello rotate x degree counterclockwise | x: 1-3600
 
-- [ ] flip x Tello fly flip x
+- [x] flip x Tello fly flip x
 l (left)
 r (right)
 f (forward)

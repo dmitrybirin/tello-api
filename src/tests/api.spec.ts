@@ -176,10 +176,28 @@ tap.test(`'rotate' command failed: rotate type wrong`, async (t) => {
 Object.entries(flipCommands).map(([key, value]: [string, string]) => {
     tap.test(`'flip ${key}' command success`, async (t) => {
         const commandFake = sinon.fake();
+        const getStateFake = sinon.fake.returns({ battery: 77 });
+        sinon.replace(tap.context.client, 'getState', getStateFake);
         sinon.replace(tap.context.client, 'command', commandFake);
         tap.context.client.flip[key]();
         t.isEqual(commandFake.called, true);
         t.deepEqual(commandFake.args[0], [`flip ${value}`]);
+        t.done();
+    });
+});
+
+Object.entries(flipCommands).map(([key, value]: [string, string]) => {
+    tap.test(`'flip ${key}' command failed cause of battery level`, async (t) => {
+        const commandFake = sinon.fake();
+        const getStateFake = sinon.fake.returns({ battery: 42 });
+        sinon.replace(tap.context.client, 'command', commandFake);
+        sinon.replace(tap.context.client, 'getState', getStateFake);
+
+        t.rejects(
+            async () => tap.context.client.flip[key](),
+            `Battery level is 42%, less then 50%. Can't do the flips`,
+        );
+        t.isEqual(commandFake.called, false);
         t.done();
     });
 });

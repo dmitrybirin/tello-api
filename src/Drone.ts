@@ -116,11 +116,19 @@ export class Drone {
         return this.command(`back ${x}`);
     }
 
+    private async doTheFlip(direction: Flip): Promise<CommandResult> {
+        const batteryLevel = this.getState().battery;
+        if (this.getState().battery <= 50) {
+            throw new Error(`Battery level is ${batteryLevel}%, less then 50%. Can't do the flips`);
+        }
+        return this.command(`flip ${direction}`);
+    }
+
     public flip: FlipInterface = {
-        left: () => this.command(`flip ${Flip.left}`),
-        right: () => this.command(`flip ${Flip.right}`),
-        back: () => this.command(`flip ${Flip.back}`),
-        forward: () => this.command(`flip ${Flip.forward}`),
+        left: () => this.doTheFlip(Flip.left),
+        right: () => this.doTheFlip(Flip.right),
+        back: () => this.doTheFlip(Flip.back),
+        forward: () => this.doTheFlip(Flip.forward),
     };
 
     public rotate(degrees: number, direction?: Rotation): Promise<CommandResult> {
@@ -150,7 +158,7 @@ export class Drone {
     }
 
     public getState(): DroneState {
-        return this.stateInterface.state;
+        return this.stateInterface.getState();
     }
 
     async disconnect(): Promise<void> {

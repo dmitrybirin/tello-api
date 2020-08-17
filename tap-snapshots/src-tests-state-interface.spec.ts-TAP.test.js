@@ -6,5 +6,5 @@
  */
 'use strict'
 exports[`src/tests/state-interface.spec.ts TAP should have state > must match snapshot 1`] = `
-Object {}
+
 `

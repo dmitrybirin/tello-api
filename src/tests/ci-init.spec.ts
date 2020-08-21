@@ -2,7 +2,7 @@ import tap from 'tap';
 import * as dgram from 'dgram';
 import { CommandInterface } from '../CommandInterface';
 
-import { CommandStatus, InterfaceStatus } from '../types';
+import { InterfaceStatus } from '../types';
 import { sendFromServerOnCommand } from './test-utils';
 
 const TEST_PORT = 4269;
@@ -38,11 +38,13 @@ tap.test('init executed successfully', async (t) => {
 tap.test('initial command returned not ok', async (t) => {
     const initPromise = t.context.commands.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
     await sendFromServerOnCommand(testServer, 'error');
-    const result = await initPromise;
+    try {
+        await initPromise;
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
 
-    t.equal(result.status, CommandStatus.error);
     t.equal(t.context.commands.status, InterfaceStatus.failed);
-    t.matchSnapshot(result);
     t.done();
 });
 
@@ -52,20 +54,25 @@ tap.test('initial command throws error', async (t) => {
     const [current] = t.context.commands.commands;
     current.deferredPromise.reject(new Error('OOPS'));
     clearTimeout(current.deferredPromise.timeout);
-    const result = await initPromise;
 
-    t.equal(result.status, CommandStatus.error);
+    try {
+        await initPromise;
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
+
     t.equal(t.context.commands.status, InterfaceStatus.failed);
-    t.matchSnapshot(result);
     t.done();
 });
 
 tap.test('initial command timeouted', async (t) => {
     const initPromise = t.context.commands.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
-    const result = await initPromise;
+    try {
+        await initPromise;
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
 
-    t.equal(result.status, CommandStatus.error);
     t.equal(t.context.commands.status, InterfaceStatus.failed);
-    t.matchSnapshot(result);
     t.done();
 });

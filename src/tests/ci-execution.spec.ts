@@ -53,18 +53,22 @@ tap.test('test info command executed successfully', async (t) => {
 tap.test('test action command returns error', async (t) => {
     const commandPromise = t.context.commands.executeCommand('test');
     await sendFromServerOnCommand(testServer, 'error');
-    const result = await commandPromise;
-    t.equal(result.status, CommandStatus.error);
-    t.matchSnapshot(result);
+    try {
+        await commandPromise;
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     t.done();
 });
 
 tap.test('test action command returns not ok/error', async (t) => {
     const commandPromise = t.context.commands.executeCommand('test');
     await sendFromServerOnCommand(testServer, 'not expected');
-    const result = await commandPromise;
-    t.equal(result.status, CommandStatus.error);
-    t.matchSnapshot(result);
+    try {
+        await commandPromise;
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     t.done();
 });
 
@@ -74,9 +78,11 @@ tap.test('test action command throws error', async (t) => {
     const [current] = t.context.commands.commands;
     current.deferredPromise.reject(new Error('OOPS'));
     clearTimeout(current.deferredPromise.timeout);
-    const result = await commandPromise;
-    t.equal(result.status, CommandStatus.error);
-    t.matchSnapshot(result);
+    try {
+        await commandPromise;
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     t.done();
 });
 
@@ -86,49 +92,59 @@ tap.test('test one before another ends should fail', async (t) => {
     await sendFromServerOnCommand(testServer, serverAnswer);
     const commandSecondPromise = t.context.commands.executeCommand('test2');
 
-    const [resultOne, resultTwo] = await Promise.all([commandOnePromise, commandSecondPromise]);
-
-    t.deepEqual(resultOne, {
-        status: CommandStatus.ok,
-        message: serverAnswer,
-    });
-
-    t.equal(resultTwo.status, CommandStatus.error);
-    t.matchSnapshot(resultTwo);
+    try {
+        const [resultOne] = await Promise.all([commandOnePromise, commandSecondPromise]);
+        t.deepEqual(resultOne, {
+            status: CommandStatus.ok,
+            message: serverAnswer,
+        });
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     t.done();
 });
 
 tap.test('test action command timeouted', async (t) => {
     const commandPromise = t.context.commands.executeCommand('test');
-    const result = await commandPromise;
-    t.equal(result.status, CommandStatus.error);
-    t.matchSnapshot(result);
+    try {
+        await commandPromise;
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     t.done();
 });
 
 tap.test('try to run command without init', async (t) => {
     const comInterface = new CommandInterface();
-    const result = await comInterface.executeCommand('test');
-    t.equal(result.status, CommandStatus.error);
-    t.matchSnapshot(result);
+
+    try {
+        await comInterface.executeCommand('test');
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     comInterface.close();
     t.done();
 });
 
 tap.test('try to run command after interface failed by timeout', async (t) => {
     const comInterface = new CommandInterface();
-    await comInterface.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
-    const result = await comInterface.executeCommand('test');
-    t.equal(result.status, CommandStatus.error);
-    t.matchSnapshot(result);
+
+    try {
+        await comInterface.init(TEST_PORT, TEST_ADDRESS, 0, 1000);
+        await comInterface.executeCommand('test');
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     comInterface.close();
     t.done();
 });
 
 tap.test('try to run command after emmiting error to socket', async (t) => {
     t.context.commands.commandSocket.emit('error', new Error('Socket Oops'));
-    const result = await t.context.commands.executeCommand('test');
-    t.equal(result.status, CommandStatus.error);
-    t.matchSnapshot(result);
+    try {
+        await t.context.commands.executeCommand('test');
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     t.done();
 });

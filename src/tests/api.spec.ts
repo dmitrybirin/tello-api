@@ -186,7 +186,7 @@ Object.entries(flipCommands).map(([key, value]: [string, string]) => {
     });
 });
 
-Object.entries(flipCommands).map(([key, value]: [string, string]) => {
+Object.entries(flipCommands).map(([key]: [string, string]) => {
     tap.test(`'flip ${key}' command failed cause of battery level`, async (t) => {
         const commandFake = sinon.fake();
         const getStateFake = sinon.fake.returns({ battery: 42 });

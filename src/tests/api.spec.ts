@@ -108,7 +108,11 @@ moveCommands.map((command) => {
         const distance = 19;
         const commandFake = sinon.fake();
         sinon.replace(tap.context.client, 'command', commandFake);
-        t.rejects(async () => tap.context.client[command](distance), 'Out of range, should be between 20 and 500');
+        try {
+            await tap.context.client[command](distance);
+        } catch (err) {
+            t.matchSnapshot(err?.message);
+        }
         t.isEqual(commandFake.called, false);
         t.done();
     });
@@ -117,7 +121,11 @@ moveCommands.map((command) => {
         const distance = 501;
         const commandFake = sinon.fake();
         sinon.replace(tap.context.client, 'command', commandFake);
-        t.rejects(async () => tap.context.client[command](distance), 'Out of range, should be between 20 and 500');
+        try {
+            await tap.context.client[command](distance);
+        } catch (err) {
+            t.matchSnapshot(err?.message);
+        }
         t.isEqual(commandFake.called, false);
         t.done();
     });
@@ -147,7 +155,11 @@ tap.test(`'rotate' command failed: hit low limit`, async (t) => {
     const degrees = 0;
     const commandFake = sinon.fake();
     sinon.replace(tap.context.client, 'command', commandFake);
-    t.rejects(async () => tap.context.client.rotate(degrees), 'Degrees out of range, should be between 1 and 3600');
+    try {
+        await tap.context.client.rotate(degrees);
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     t.isEqual(commandFake.called, false);
     t.done();
 });
@@ -156,7 +168,11 @@ tap.test(`'rotate' command failed: hit high limit`, async (t) => {
     const degrees = 3601;
     const commandFake = sinon.fake();
     sinon.replace(tap.context.client, 'command', commandFake);
-    t.rejects(async () => tap.context.client.rotate(degrees), 'Degrees out of range, should be between 1 and 3600');
+    try {
+        await tap.context.client.rotate(degrees);
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     t.isEqual(commandFake.called, false);
     t.done();
 });
@@ -165,10 +181,11 @@ tap.test(`'rotate' command failed: rotate type wrong`, async (t) => {
     const degrees = 180;
     const commandFake = sinon.fake();
     sinon.replace(tap.context.client, 'command', commandFake);
-    t.rejects(
-        async () => tap.context.client.rotate(degrees, 'flip-not-rotate'),
-        `Direction out of range, should be either 'cw' or 'ccw'`,
-    );
+    try {
+        await tap.context.client.rotate(degrees, 'flip-not-rotate');
+    } catch (err) {
+        t.matchSnapshot(err?.message);
+    }
     t.isEqual(commandFake.called, false);
     t.done();
 });
@@ -192,11 +209,11 @@ Object.entries(flipCommands).map(([key]: [string, string]) => {
         const getStateFake = sinon.fake.returns({ battery: 42 });
         sinon.replace(tap.context.client, 'command', commandFake);
         sinon.replace(tap.context.client, 'getState', getStateFake);
-
-        t.rejects(
-            async () => tap.context.client.flip[key](),
-            `Battery level is 42%, less then 50%. Can't do the flips`,
-        );
+        try {
+            await tap.context.client.flip[key]();
+        } catch (err) {
+            t.matchSnapshot(err?.message);
+        }
         t.isEqual(commandFake.called, false);
         t.done();
     });

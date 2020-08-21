@@ -6,67 +6,33 @@
  */
 'use strict'
 exports[`src/tests/ci-execution.spec.ts TAP test action command returns error > must match snapshot 1`] = `
-Object {
-  "errorMessage": "Command 'test' returned 'error'",
-  "message": "error",
-  "status": "error",
-}
+Command 'test' failed cause of exception: Command 'test' returned 'error'
 `
 
 exports[`src/tests/ci-execution.spec.ts TAP test action command returns not ok/error > must match snapshot 1`] = `
-Object {
-  "errorMessage": "Command 'test' returned 'not expected'. Should be only ok/error",
-  "message": "not expected",
-  "status": "error",
-}
+Command 'test' failed cause of exception: Command 'test' returned 'not expected'. Should be only ok/error
 `
 
 exports[`src/tests/ci-execution.spec.ts TAP test action command throws error > must match snapshot 1`] = `
-Object {
-  "errorMessage": "Command 'test' failed cause of exception: OOPS",
-  "exception": Error: OOPS,
-  "message": null,
-  "status": "error",
-}
+Command 'test' failed cause of exception: OOPS
 `
 
 exports[`src/tests/ci-execution.spec.ts TAP test action command timeouted > must match snapshot 1`] = `
-Object {
-  "errorMessage": "Command 'test' failed cause of exception: timeout after 1000 ms",
-  "exception": Error: timeout after 1000 ms,
-  "message": null,
-  "status": "error",
-}
+Command 'test' failed cause of exception: timeout after 1000 ms
 `
 
 exports[`src/tests/ci-execution.spec.ts TAP test one before another ends should fail > must match snapshot 1`] = `
-Object {
-  "errorMessage": "Command test2 will not be executed, test1 still in progress",
-  "message": null,
-  "status": "error",
-}
+Command test2 will not be executed, test1 still in progress
 `
 
 exports[`src/tests/ci-execution.spec.ts TAP try to run command after emmiting error to socket > must match snapshot 1`] = `
-Object {
-  "errorMessage": "Interface is in failed status, please reinit",
-  "message": null,
-  "status": "error",
-}
+Interface is in failed status, please reinit
 `
 
 exports[`src/tests/ci-execution.spec.ts TAP try to run command after interface failed by timeout > must match snapshot 1`] = `
-Object {
-  "errorMessage": "Interface is in failed status, please reinit",
-  "message": null,
-  "status": "error",
-}
+Drone is not ready to recieve commands: Command 'command' failed cause of exception: timeout after 1000 ms
 `
 
 exports[`src/tests/ci-execution.spec.ts TAP try to run command without init > must match snapshot 1`] = `
-Object {
-  "errorMessage": "Interface is in the initial status, please init to send commands",
-  "message": null,
-  "status": "error",
-}
+Interface is in the initial status, please init to send commands
 `

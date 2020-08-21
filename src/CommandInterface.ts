@@ -27,22 +27,6 @@ export class CommandInterface {
 
     private defaultCommandTimeout = 10000;
 
-    private createCommandErrorResult(rawMessage: string | null, errorMessage: string, rawError?: Error): CommandResult {
-        logger.error(`🚁😢${errorMessage}`);
-
-        const commonMessage = {
-            status: CommandStatus.error,
-            message: rawMessage,
-            errorMessage,
-        };
-
-        if (rawError) {
-            return { ...commonMessage, exception: rawError };
-        } else {
-            return commonMessage;
-        }
-    }
-
     private onSocketError(error: string): void {
         logger.error(`💻: socket error: ${error}`);
         this.status = InterfaceStatus.failed;
@@ -98,9 +82,9 @@ export class CommandInterface {
             });
 
             const result = await this.executeCommand('command');
-
-            if (result.status === CommandStatus.ok) {
-                if (result.message === 'ok') {
+            console.log({ result });
+            if (result?.status === CommandStatus.ok) {
+                if (result?.message === 'ok') {
                     this.status = InterfaceStatus.ready;
                     return {
                         status: CommandStatus.ok,
@@ -108,25 +92,17 @@ export class CommandInterface {
                     };
                 } else {
                     this.status = InterfaceStatus.failed;
-                    const errorMessage = `Drone is not ready to recieve commands. Command 'command' returned '${result.message}'.`;
-                    return this.createCommandErrorResult(result.message, errorMessage);
+                    throw new Error(
+                        `Drone is not ready to recieve commands. Command 'command' returned '${result.message}'.`,
+                    );
                 }
             }
 
-            if (result.status === CommandStatus.error) {
-                this.status = InterfaceStatus.failed;
-                const { exception, errorMessage: originalErrorMessage } = result;
-                const errorMessage = `Drone is not ready to recieve commands. ${originalErrorMessage}`;
-                return this.createCommandErrorResult(result.message, errorMessage, exception);
-            }
-
             this.status = InterfaceStatus.failed;
-            const errorMessage = `Drone is not ready to recieve commands: Unknown status ${result.status}`;
-            return this.createCommandErrorResult(null, errorMessage);
+            throw new Error(`Drone is not ready to recieve commands: status ${result.status}`);
         } catch (err) {
             this.status = InterfaceStatus.failed;
-            const errorMessage = `Drone is not ready to recieve commands: ${err?.message || 'no message'}`;
-            return this.createCommandErrorResult(null, errorMessage, err);
+            throw new Error(`Drone is not ready to recieve commands: ${err?.message || 'no message'}`);
         }
     }
 
@@ -158,13 +134,11 @@ export class CommandInterface {
                     const result = await deferredPromise.promise;
 
                     if (result === 'error') {
-                        const errorMessage = `Command '${command}' returned 'error'`;
-                        return this.createCommandErrorResult(result, errorMessage);
+                        throw new Error(`Command '${command}' returned 'error'`);
                     }
 
                     if (commandType === CommandType.action && result !== 'ok') {
-                        const errorMessage = `Command '${command}' returned '${result}'. Should be only ok/error`;
-                        return this.createCommandErrorResult(result, errorMessage);
+                        throw new Error(`Command '${command}' returned '${result}'. Should be only ok/error`);
                     }
 
                     return {
@@ -183,25 +157,22 @@ export class CommandInterface {
                     const errorMessage = `Command '${command}' failed cause of exception: ${
                         err?.message || 'unknown message'
                     }`;
-                    return this.createCommandErrorResult(null, errorMessage, err);
+                    logger.error(errorMessage);
+                    throw new Error(errorMessage);
                 }
             } else {
-                const errorMessage = `Command ${command} will not be executed, ${currentCommand.command} still in progress`;
-                return this.createCommandErrorResult(null, errorMessage);
+                throw new Error(`Command ${command} will not be executed, ${currentCommand.command} still in progress`);
             }
         } else {
             if (this.status === InterfaceStatus.failed) {
-                const errorMessage = `Interface is in failed status, please reinit`;
-                return this.createCommandErrorResult(null, errorMessage);
+                throw new Error(`Interface is in failed status, please reinit`);
             }
 
             if (this.status === InterfaceStatus.initial) {
-                const errorMessage = `Interface is in the initial status, please init to send commands`;
-                return this.createCommandErrorResult(null, errorMessage);
+                throw new Error(`Interface is in the initial status, please init to send commands`);
             }
 
-            const errorMessage = `Interface is in the unknown status, please try to reinit`;
-            return this.createCommandErrorResult(null, errorMessage);
+            throw new Error(`Interface is in the unknown status, please try to reinit`);
         }
     }
 

@@ -2,11 +2,13 @@
   "name": "tello-api",
   "version": "0.0.1",
   "description": "",
-  "main": "dist/index.js",
+  "main": "lib/index.js",
+  "files": ["lib/"],
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc",
-    "test": "tap"
+    "test": "tap",
+    "lint": "eslint src"
   },
   "keywords": [],
   "author": "",

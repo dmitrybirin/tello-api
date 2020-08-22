@@ -1,3 +1,14 @@
+export interface DroneConstructorInput {
+    commandHost?: string;
+    commandPort?: number;
+    statePort?: number;
+}
+
+export interface DroneConnectInput {
+    clientPort: number;
+    defaultCommandTimeout: number;
+}
+
 export interface DroneState {
     pitch: number,
     roll: number,

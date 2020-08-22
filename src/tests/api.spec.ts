@@ -47,7 +47,11 @@ tap.beforeEach((done) => {
 
 tap.test('setup', async () => {
     const testDrone = new TestDrone(TEST_COMMAND_PORT, TEST_STATE_PORT);
-    const droneClient = new Drone(TEST_ADDRESS, TEST_COMMAND_PORT, TEST_STATE_PORT);
+    const droneClient = new Drone({
+        commandHost: TEST_ADDRESS,
+        commandPort: TEST_COMMAND_PORT,
+        statePort: TEST_STATE_PORT,
+    });
     const initPromise = droneClient.connect();
     await testDrone.answerOnCommand('ok');
     await initPromise;

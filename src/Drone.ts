@@ -2,7 +2,7 @@ import * as dgram from 'dgram';
 import { logger } from './utils';
 import { CommandInterface } from './CommandInterface';
 import { StateInterface } from './StateInterface';
-import { DroneState, CommandResult } from './types';
+import { DroneState, CommandResult, DroneConstructorInput, DroneConnectInput } from './types';
 
 enum droneStatus {
     error = 'ERROR',
@@ -29,10 +29,11 @@ enum Flip {
     back = 'b',
 }
 
+
 export class Drone {
     public stateSocket: dgram.Socket = dgram.createSocket('udp4');
     public status: droneStatus = droneStatus.disconnected;
-    private host = '192.168.10.1';
+    private commandHost = '192.168.10.1';
     private commandPort = 8889;
     private statePort = 8890;
 
@@ -45,10 +46,10 @@ export class Drone {
     private lowerRotationLimit = 1;
     private upperRotationLimit = 3600;
 
-    constructor(host?: string, commandPort?: number, statePort?: number) {
-        if (host) this.host = host;
-        if (commandPort) this.commandPort = commandPort;
-        if (statePort) this.statePort = statePort;
+    constructor(input?: DroneConstructorInput) {
+        if (input?.commandHost) this.commandHost = input?.commandHost;
+        if (input?.commandPort) this.commandPort = input?.commandPort;
+        if (input?.statePort) this.statePort = input?.statePort;
     }
 
     private checkForDistanceLimit = (value: number) => {
@@ -140,9 +141,9 @@ export class Drone {
         }
     }
 
-    async connect(): Promise<void> {
+    async connect(input?: DroneConnectInput): Promise<void> {
         try {
-            const result = await this.commandsInterface.init(this.commandPort, this.host);
+            const result = await this.commandsInterface.init(this.commandPort, this.commandHost, input?.clientPort, input?.defaultCommandTimeout);
             if (result.status !== 'ok') {
                 throw new Error(result.errorMessage);
             } else {

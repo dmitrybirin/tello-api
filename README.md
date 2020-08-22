@@ -10,18 +10,23 @@ The API if using the [dgram sockets](https://nodejs.org/api/dgram.html) under th
 ## Installation
 
 ```
-[TBD]
+yarn add tello-api
+```
+
+```
+npm i -save tello-api
 ```
 
 ## Usage
 
 API is working with async/await syntax
+Currently it's supporting only one command at the time
 
 **Typescript example**
 ```typescript
-import { Drone } from [TBD]
+import { Drone } from 'tello-api'
 
-const drone = new Drone();
+const drone = new Drone(); // will create new instance with default ports
 await drone.connect(); // will init the command and state sockets
 const temp = await drone.command('battery?'); // will return battery result
 
@@ -31,6 +36,28 @@ await drone.land() // drone will land
 
 await drone.disconnect(); // remove all listeners from the sockets
 
+```
+
+To create an instance with different drone host and ports use the [DroneConstructorInterface](src/types.ts:1) as in example with defaults 👇
+
+``` typescript
+const drone = new Drone({
+    commandHost: 192.168.10.1;
+    commandPort: 8889;
+    statePort?: 8890;
+});
+```
+
+When connecting to the drone, client UDP port on your machine assigned by default. To change that use the optional parameters to connect command: [DroneConnectInterface](src/types.ts:7) as in example with defaults 👇
+
+
+``` typescript
+const drone = new Drone();
+
+await drone.connect({
+    clientPort: 9888,
+    defaultCommandTimeout: 12000 // time in ms 
+})
 ```
 
 ## Developing
@@ -49,3 +76,7 @@ yarn
 I'm using the [node-tap](https://node-tap.org/) for testing
 To run tests `npm test` should be enough. Config is in `.taprc` file.
 
+
+### Future Development
+- [ ] Cover all SDK commands (`go`, `curve`, `set commands` not supported yet)
+- [ ] Generate API docs from the ts files.

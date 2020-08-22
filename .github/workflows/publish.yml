@@ -16,4 +16,4 @@ jobs:
       - run: yarn build
       - uses: JS-DevTools/npm-publish@v1
         with:
-          token: ${{ secrets.PACKAGES_TOKEN }}
+          token: ${{ secrets.NPM_TOKEN }}

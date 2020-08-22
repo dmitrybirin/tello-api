@@ -12,6 +12,9 @@ jobs:
     - name: setup Node.js environment
       uses: actions/setup-node@v1.4.3
 
+    - name: install deps
+      uses: yarn
+
     - name: lint checks
       run: yarn lint
 

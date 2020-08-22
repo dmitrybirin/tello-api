@@ -38,7 +38,7 @@ await drone.disconnect(); // remove all listeners from the sockets
 
 ```
 
-To create an instance with different drone host and ports use the [DroneConstructorInterface](./src/types.ts#L1) as in example with defaults 👇
+To create an instance with different drone host and ports use the [DroneConstructorInput interface](./src/types.ts#L1) as in example with defaults 👇
 
 ``` typescript
 const drone = new Drone({
@@ -48,7 +48,7 @@ const drone = new Drone({
 });
 ```
 
-When connecting to the drone, client UDP port on your machine assigned by default. To change that use the optional parameters to connect command: [DroneConnectInterface](./src/types.ts#L7) as in example with defaults 👇
+When connecting to the drone, client UDP port on your machine assigned by default. To change that use the optional parameters to connect command: [DroneConnectInput interface](./src/types.ts#L7) as in example with defaults 👇
 
 
 ``` typescript

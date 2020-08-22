@@ -60,7 +60,7 @@ export class StateInterface {
         return this.mapState(rawState);
     };
 
-    public getState() {
+    public getState(): DroneState {
         return this.parseString(this.state);
     }
 

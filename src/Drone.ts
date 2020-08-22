@@ -29,7 +29,6 @@ enum Flip {
     back = 'b',
 }
 
-
 export class Drone {
     public stateSocket: dgram.Socket = dgram.createSocket('udp4');
     public status: droneStatus = droneStatus.disconnected;
@@ -143,7 +142,12 @@ export class Drone {
 
     async connect(input?: DroneConnectInput): Promise<void> {
         try {
-            const result = await this.commandsInterface.init(this.commandPort, this.commandHost, input?.clientPort, input?.defaultCommandTimeout);
+            const result = await this.commandsInterface.init(
+                this.commandPort,
+                this.commandHost,
+                input?.clientPort,
+                input?.defaultCommandTimeout,
+            );
             if (result.status !== 'ok') {
                 throw new Error(result.errorMessage);
             } else {

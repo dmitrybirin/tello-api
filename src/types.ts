@@ -10,22 +10,22 @@ export interface DroneConnectInput {
 }
 
 export interface DroneState {
-    pitch: number,
-    roll: number,
-    yaw: number,
-    speedX: number,
-    speedY: number,
-    speedZ: number,
-    lowestTemp: number,
-    highestTemp: number,
-    TOFdistance: number,
-    height: number,
-    battery: number,
-    barometer: number,
-    motorsTime: number,
-    accelarationX: number,
-    accelarationY: number,
-    accelarationZ: number,
+    pitch: number;
+    roll: number;
+    yaw: number;
+    speedX: number;
+    speedY: number;
+    speedZ: number;
+    lowestTemp: number;
+    highestTemp: number;
+    TOFdistance: number;
+    height: number;
+    battery: number;
+    barometer: number;
+    motorsTime: number;
+    accelarationX: number;
+    accelarationY: number;
+    accelarationZ: number;
 }
 
 export enum CommandStatus {

@@ -1,7 +1,7 @@
 {
   "name": "tello-api",
   "version": "0.0.1",
-  "description": "",
+  "description": "node api for the tello drone",
   "main": "lib/index.js",
   "files": ["lib/"],
   "scripts": {
